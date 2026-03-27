@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: away-sandbox-backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://away:away@postgres:5432/away_sandbox
+      POSTGRES_USER: away
+      POSTGRES_PASSWORD: away
+      POSTGRES_DB: away_sandbox
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      DUCKDB_PATH: /app/data/analytics.duckdb
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: away-sandbox-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: away
+      POSTGRES_PASSWORD: away
+      POSTGRES_DB: away_sandbox
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: away-sandbox-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@away.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
