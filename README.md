@@ -1,25 +1,124 @@
 # Away Sandbox
 
-A scaffolded full-stack web sandbox for link ingestion, geospatial insight exploration, and AI itinerary experimentation.
+Away Sandbox is a full-stack learning lab for mock social link ingestion, geospatial parsing output, and backend/data pipeline experimentation.
+
+## Current Functionality
+
+Implemented features in the current app:
+
+- Mock Instagram link ingestion from the Home page
+- Production-shaped parsed response payloads from backend
+- Parsed location objects with name/address/city/country/lat/lng
+- Save parsed imports to Postgres via API
+- Load saved imports on Imported Videos page
+- Backend DB health endpoint surfaced in frontend badges
+- Manual caption input and sample JSON import support
+
+## Tech Stack
+
+- Frontend: Next.js + TypeScript + Tailwind CSS
+- Backend: FastAPI + Pydantic + SQLAlchemy
+- Databases: Postgres (primary persistence), DuckDB (analytics sandbox)
 
 ## Project Structure
 
 ```text
 away_sandbox/
-├── frontend/                # Next.js + Tailwind frontend
-├── backend/                 # FastAPI backend
-│   ├── routers/             # API routers
-│   ├── services/            # Business service placeholders
-│   ├── data/                # Data access and analytics files
-│   ├── models/              # Pydantic/domain model placeholders
-│   └── utils/               # Utility/config helpers
+├── frontend/
+│   ├── app/
+│   │   ├── page.tsx                    # Home ingest + parse card + save action
+│   │   └── imported-videos/page.tsx    # Saved imports view
+│   └── lib/imported-videos.ts          # Shared frontend import types
+├── backend/
+│   ├── main.py                         # FastAPI app and router wiring
+│   ├── routers/
+│   │   ├── upload_link.py              # Mock parse payload endpoint
+│   │   ├── imports.py                  # save/list/db_health endpoints
+│   │   └── manual_geocode.py           # address geocoding endpoint
+│   ├── data/postgres.py                # SQLAlchemy engine/session
+│   └── services/link_processing_service.py
 ├── docker-compose.yml
 └── README.md
 ```
 
-## Quick Start
+## API Endpoints
 
-### 1. Frontend
+### POST /upload_link
+
+Validates Instagram-style URL and returns mock parsed payload that matches the real backend contract:
+
+```json
+{
+      "caption": "A beautiful day exploring the streets of Paris!",
+      "sourceUrl": "https://www.instagram.com/reel/xyz123/",
+      "videoUrl": "https://example.com/mock_video_paris.mp4",
+      "thumbnailUrl": "https://example.com/mock_thumbnail_paris.jpg",
+      "locations": [
+            {
+                  "name": "Eiffel Tower",
+                  "address": "Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France",
+                  "city": "Paris",
+                  "country": "France",
+                  "lat": 48.8584,
+                  "lng": 2.2945
+            }
+      ]
+}
+```
+
+### POST /api/save_import
+
+Saves parsed results into Postgres table `imports`.
+
+### GET /api/imports
+
+Returns saved imports grouped for frontend cards (with mock thumbnail and timestamp).
+
+### GET /api/db_health
+
+Returns Postgres connectivity status:
+
+```json
+{ "ok": true, "database": "postgres" }
+```
+
+### POST /geocode_address
+
+Manual geocoding endpoint backed by Google Geocoding API.
+
+## Database Schema
+
+Table auto-created by backend when first saving/listing imports:
+
+`imports (id, caption, source_url, lat, lng, city, country, created_at)`
+
+## Local Setup
+
+### 1. Start Postgres (required for save/list imports)
+
+From repository root:
+
+```bash
+docker compose up -d postgres
+```
+
+Verify:
+
+```bash
+docker compose ps
+```
+
+### 2. Run Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --app-dir . --host 0.0.0.0 --port 8001
+```
+
+Backend URL: `http://127.0.0.1:8001`
+
+### 3. Run Frontend
 
 ```bash
 cd frontend
@@ -27,59 +126,41 @@ npm install
 npm run dev
 ```
 
-Frontend runs at `http://localhost:3000`.
-
-### 2. Backend
-
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-
-Backend runs at `http://localhost:8000`.
-
-### 3. Docker Compose
-
-```bash
-docker compose up --build
-```
-
-Services:
-- Backend API: `http://localhost:8000`
-- Postgres: `localhost:5432`
-- pgAdmin: `http://localhost:5050`
+Frontend URL: `http://localhost:3000`
 
 ## Environment Variables
 
-Create a `.env` file at repository root (or export these values):
+Use `backend/.env` for local backend settings:
 
 ```env
+DATABASE_URL=postgresql://away:away@localhost:5432/away_sandbox
 POSTGRES_USER=away
 POSTGRES_PASSWORD=away
 POSTGRES_DB=away_sandbox
-POSTGRES_HOST=postgres
+POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
-DATABASE_URL=postgresql://away:away@postgres:5432/away_sandbox
 DUCKDB_PATH=./data/analytics.duckdb
+
+# Optional for geocode enrichment endpoints
+BACKEND_GOOGLE_API_KEY=your_google_maps_api_key
 ```
 
-## Architecture Diagram (Placeholder)
+For frontend API base URL (optional), use `frontend/.env.local`:
 
-```text
-[ Next.js Frontend ]
-         |
-         v
-[ FastAPI Backend ] ---> [ Postgres ]
-         |
-         v
-      [ DuckDB ]
+```env
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8001
 ```
+
+## User Flow
+
+1. Paste Instagram link on Home page
+2. Optionally provide manual caption
+3. Click Ingest to receive parsed mock payload
+4. Click Add to Imported Videos to persist in Postgres
+5. Open Imported Videos page to view saved records
 
 ## Notes
 
-- This repository currently contains scaffolding only.
-- Business logic is intentionally not implemented yet.
-- API route handlers contain TODO placeholders.
+- This project intentionally uses mock ingestion (no scraping providers).
+- If Postgres is down, save/list endpoints will fail until DB is started.
+- DB connectivity is shown in the frontend as a status badge.

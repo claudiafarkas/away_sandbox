@@ -10,3 +10,7 @@ def get_settings() -> dict:
         "postgres_db": os.getenv("POSTGRES_DB", "away_sandbox"),
         "duckdb_path": os.getenv("DUCKDB_PATH", "./data/analytics.duckdb"),
     }
+
+
+def get_google_api_key() -> str | None:
+    return os.getenv("BACKEND_GOOGLE_API_KEY") or os.getenv("GOOGLE_MAPS_API_KEY")
