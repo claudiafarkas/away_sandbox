@@ -1,6 +1,35 @@
 # Away Sandbox
 
-Away Sandbox is a full-stack learning lab for mock social link ingestion, geospatial parsing output, and backend/data pipeline experimentation.
+Away Sandbox is a full‑stack learning lab for mock social link ingestion, geospatial parsing output, and backend/data pipeline experimentation.
+
+It serves as an experimental subtree of the main Away iOS app, allowing rapid prototyping of data engineering, ML engineering, and AI workflows without affecting the production mobile codebase.
+
+## Learning Goals
+
+This project exists to provide a safe, modular environment for practicing:
+
+*Data Engineering*
+
+* Building ingestion endpoints and structured persistence layers
+* Designing schemas and transformations (Postgres + DuckDB)
+* Experimenting with orchestration tools (Airflow)
+* Running distributed or batch processing jobs (Spark)
+
+*ML / AI Engineering*
+
+* Extracting and enriching location metadata
+* Preparing data for embeddings and vector search
+* Building RAG‑style pipelines for itinerary generation
+* Experimenting with geospatial clustering and analytics
+
+*Backend Engineering*
+
+* Designing clean FastAPI services
+* Implementing modular routers and service layers
+* Managing environment configs and containerized services
+* Building production‑shaped API contracts
+
+**The sandbox intentionally uses mock ingestion to focus on the engineering layers that matter for long‑term career growth.**
 
 ## Current Functionality
 
@@ -43,9 +72,7 @@ away_sandbox/
 
 ## API Endpoints
 
-### POST /upload_link
-
-Validates Instagram-style URL and returns mock parsed payload that matches the real backend contract:
+**POST /upload_link:** Validates Instagram-style URL and returns mock parsed payload that matches the real backend contract:
 
 ```json
 {
@@ -66,25 +93,17 @@ Validates Instagram-style URL and returns mock parsed payload that matches the r
 }
 ```
 
-### POST /api/save_import
+**POST /api/save_import:** Saves parsed results into Postgres table `imports`.
 
-Saves parsed results into Postgres table `imports`.
+**GET /api/imports:** Returns saved imports grouped for frontend cards (with mock thumbnail and timestamp).
 
-### GET /api/imports
-
-Returns saved imports grouped for frontend cards (with mock thumbnail and timestamp).
-
-### GET /api/db_health
-
-Returns Postgres connectivity status:
+**GET /api/db_health:** Returns Postgres connectivity status:
 
 ```json
 { "ok": true, "database": "postgres" }
 ```
 
-### POST /geocode_address
-
-Manual geocoding endpoint backed by Google Geocoding API.
+**POST /geocode_address:** Manual geocoding endpoint backed by Google Geocoding API.
 
 ## Database Schema
 
